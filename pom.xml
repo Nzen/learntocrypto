@@ -1,0 +1,110 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<project
+		xmlns = "http://maven.apache.org/POM/4.0.0"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>
+		4.0.0
+	</modelVersion>
+	<groupId>
+		ws.nzen.crypto.sodium
+	</groupId>
+	<artifactId>
+		learntocrypto
+	</artifactId>
+	<version>
+		0.0
+	</version>
+	<inceptionYear>
+		2018
+	</inceptionYear>
+	<licenses>
+		<license>
+			<name>
+				ISC v2.0 and later
+			</name>
+			<url>
+				https://opensource.org/licenses/ISC
+			</url>
+		</license>
+	</licenses>
+	<dependencies>
+		<dependency>
+			<groupId>
+				com.alibaba
+			</groupId>
+			<artifactId>
+				fastjson
+			</artifactId>
+			<version>
+				1.2.28
+			</version>
+		</dependency>
+		<!--
+		<dependency>
+			<groupId>
+				
+			</groupId>
+			<artifactId>
+				
+			</artifactId>
+			<version>
+				
+			</version>
+		</dependency>
+		-->
+	</dependencies>
+	<build>
+	    <plugins>
+	    	<!-- make source jar -->
+		    <plugin>
+				<groupId>
+					org.apache.maven.plugins
+				</groupId>
+				<artifactId>
+					maven-source-plugin
+				</artifactId>
+				<executions>
+					<execution>
+						<id>
+							attach-sources
+						</id>
+						<goals>
+						<goal>
+							jar
+						</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+	    	<!-- skip tests without remembering -DskipTests -->
+			<plugin>
+				<groupId>
+					org.apache.maven.plugins
+				</groupId>
+				<artifactId>
+					maven-surefire-plugin
+				</artifactId>
+				<version>
+					2.12.4
+				</version>
+				<configuration>
+					<skipTests>
+						true
+					</skipTests>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	<properties>
+	    <!-- jdk v3 is the maven default -->
+		<maven.compiler.source>
+			1.8
+		</maven.compiler.source>
+		<maven.compiler.target>
+			1.8
+		</maven.compiler.target>
+	</properties>
+	<description>Own solutions to the problem set</description>
+	<name>learntotcrypto</name>
+</project>
