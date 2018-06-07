@@ -55,6 +55,9 @@
 		-->
 	</dependencies>
 	<build>
+    	<sourceDirectory>
+    	/home/nzen/workspace/java_neon/learntocrypto/solutions/Nzen/main/java
+    	</sourceDirectory>
 	    <plugins>
 	    	<!-- make source jar -->
 		    <plugin>
@@ -92,6 +95,37 @@
 					<skipTests>
 						true
 					</skipTests>
+				</configuration>
+			</plugin>
+	    	<!-- config for jar -->
+	    	<plugin>
+				<groupId>
+				org.apache.maven.plugins
+				</groupId>
+				<artifactId>
+				maven-jar-plugin
+				</artifactId>
+				<version>3.1.0
+				</version>
+				<configuration>
+				<archive>
+				<index>
+				true
+				</index>
+				<manifest>
+				<addClasspath>
+				true
+				</addClasspath>
+				<mainClass>
+					ws.nzen.crypto.sodium.ltc.Bios
+				</mainClass>
+				</manifest>
+				<manifestEntries>
+				<mode>
+				development
+				</mode>
+				</manifestEntries>
+				</archive>
 				</configuration>
 			</plugin>
 		</plugins>

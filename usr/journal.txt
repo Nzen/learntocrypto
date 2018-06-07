@@ -1,0 +1,5 @@
+
+# 180605 am
+
+Added jar maven config, but I left it broken because I need a switch such that it will run either the server or client. Preferably, it should use a cli arg to choose which (I wonder if a teller is different from a bank user). Also add one for the tcp port.
+

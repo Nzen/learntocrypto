@@ -23,6 +23,7 @@ public class Bank
 	public static void main( String[] args )
 	{
 		// cli stuff, eventually
+		new Bank().serveClientele();
 	}
 
 
@@ -44,12 +45,13 @@ public class Bank
 		final String here = cl +"e ";
 		System.out.println( here +"listening for clients" );
 		try ( Socket bidiChannel = ear.accept();
-				PrintWriter stdOut = new PrintWriter(
+				PrintWriter netOut = new PrintWriter(
 						bidiChannel.getOutputStream(), true );
-				BufferedReader stdIn = new BufferedReader(
+				BufferedReader netIn = new BufferedReader(
 						new InputStreamReader( bidiChannel.getInputStream() ) ); )
 		{
-			respond( stdIn, stdOut );
+			respond( netIn, netOut );
+			// NOTE while respond will last a whole conversation, this doesn't stay alive after the first one
 		}
 		catch ( IOException | SecurityException | IllegalBlockingModeException ie )
 		{
@@ -58,17 +60,25 @@ public class Bank
 	}
 
 
-	private void respond( BufferedReader stdIn,
-			PrintWriter stdOut ) throws IOException
+	private void respond( BufferedReader netIn,
+			PrintWriter netOut ) throws IOException
 	{
+		final String here = cl +"r ";
 		String inputT, outputT;
 		// AhpProtocol referee = new AhpProtocol();
-		while ( (inputT = stdIn.readLine()) != null ) // IMPROVE assignment as expression
+		int times = 0;
+		while ( (inputT = netIn.readLine()) != null ) // IMPROVE assignment as expression
 		{
-			outputT = "Bank received:"+ inputT;// referee.replyFrom( inputT );
-			if ( outputT.equals( "END" ) )
+			System.out.println( here +"Bank received: "+ inputT );
+			outputT = inputT;// referee.replyFrom( inputT );
+			if ( times > 0 || outputT.equals( "END" ) )
 			{
 				break;
+			}
+			else
+			{
+				netOut.println( outputT ); // echo
+				times++;
 			}
 		}
 	}
