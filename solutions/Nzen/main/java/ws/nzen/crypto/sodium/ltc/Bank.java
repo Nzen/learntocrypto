@@ -8,8 +8,12 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.channels.IllegalBlockingModeException;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 
 /** 
  */
@@ -103,9 +107,25 @@ public class Bank
 			{
 				System.out.println( here +"Bank received: "+ inputT );
 				outputT = inputT;// referee.replyFrom( inputT );
-				if ( times > 0 || outputT.equals( "END" ) )
+				JSONObject request = JSON.parseObject( inputT );
+				if ( times > 0 )
 				{
 					break;
+				}
+				else if ( outputT.equals( "END" ) )
+				{
+					ear.close();
+				}
+				else if ( request.containsKey( "cmd" ) )
+				{
+					String typeOfRequest = request.getString( "cmd" );
+					if ( typeOfRequest.equals( "balance" ) )
+					{
+						request.put( "balance", "0" );
+						outputT = JSON.toJSONString( request );
+						netOut.println( outputT ); // echo
+						times++;
+					}
 				}
 				else
 				{

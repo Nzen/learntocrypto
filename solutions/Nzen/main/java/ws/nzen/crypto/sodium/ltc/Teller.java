@@ -2,6 +2,10 @@
 package ws.nzen.crypto.sodium.ltc;
 
 import java.net.Socket;
+import java.util.Map;
+import java.util.TreeMap;
+
+import com.alibaba.fastjson.JSON;
 
 /** 
  */
@@ -32,7 +36,11 @@ public class Teller
 		{
 			String inputT, outputT;
 			int times = 0;
-			netOut.println( "ff" );
+			// Improve use a real protocol
+			Map<String,String> request = new TreeMap<>();
+			request.put("cmd", "balance");
+			netOut.println( JSON.toJSONString(request) );
+			times++;
 			while ( (inputT = netIn.readLine()) != null ) // IMPROVE assignment as expression
 			{
 				System.out.println( here +"Teller received: "+ inputT );
