@@ -8,27 +8,22 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.channels.IllegalBlockingModeException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /** 
  */
 public class Bank
 {
 	private static final String cl = "b.";
+	private ThreadPoolExecutor executor;
 	private int tcpPort = 3876;
 	private ServerSocket ear;
-
-	/**
-	 * @param args
-	 */
-	public static void main( String[] args )
-	{
-		// cli stuff, eventually
-		new Bank().serveClientele();
-	}
 
 
 	public Bank()
 	{
+		executor = (ThreadPoolExecutor)Executors.newFixedThreadPool(10);
 		try
 		{
 			ear = new ServerSocket( tcpPort );
@@ -44,43 +39,89 @@ public class Bank
 	{
 		final String here = cl +"e ";
 		System.out.println( here +"listening for clients" );
-		try ( Socket bidiChannel = ear.accept();
-				PrintWriter netOut = new PrintWriter(
-						bidiChannel.getOutputStream(), true );
-				BufferedReader netIn = new BufferedReader(
-						new InputStreamReader( bidiChannel.getInputStream() ) ); )
+		while ( true )
 		{
-			respond( netIn, netOut );
-			// NOTE while respond will last a whole conversation, this doesn't stay alive after the first one
-		}
-		catch ( IOException | SecurityException | IllegalBlockingModeException ie )
-		{
-			System.err.println( here +"couldn't accept connections"+ ie );
+			Socket bidiChannel;
+			try
+			{
+				bidiChannel = ear.accept();
+				System.out.println( here +"caught a client" );
+				Dispatchee autoResponder = new Dispatchee();
+				autoResponder.setSocket( bidiChannel );
+				executor.execute( autoResponder );
+			}
+			catch ( IOException ie )
+			{
+				System.err.println( here +"couldn't accept connections"+ ie );
+			}
 		}
 	}
 
 
-	private void respond( BufferedReader netIn,
-			PrintWriter netOut ) throws IOException
+	protected class Dispatchee implements Runnable
 	{
-		final String here = cl +"r ";
-		String inputT, outputT;
-		// AhpProtocol referee = new AhpProtocol();
-		int times = 0;
-		while ( (inputT = netIn.readLine()) != null ) // IMPROVE assignment as expression
+		Socket bidiChannel;
+
+
+		public void run()
 		{
-			System.out.println( here +"Bank received: "+ inputT );
-			outputT = inputT;// referee.replyFrom( inputT );
-			if ( times > 0 || outputT.equals( "END" ) )
+			final String here = "b.d.r ";
+			try ( PrintWriter netOut = new PrintWriter(
+							bidiChannel.getOutputStream(), true );
+					BufferedReader netIn = new BufferedReader(
+							new InputStreamReader( bidiChannel.getInputStream() ) ); )
 			{
-				break;
+				System.out.println( here +"responding a client, concurrently" );
+				respond( netIn, netOut );
 			}
-			else
+			catch ( IOException | SecurityException | IllegalBlockingModeException ie )
 			{
-				netOut.println( outputT ); // echo
-				times++;
+				System.err.println( here +"couldn't accept connections"+ ie );
+			}
+			finally
+			{
+				try
+				{
+					bidiChannel.close();
+				}
+				catch ( IOException ie )
+				{
+					System.err.println( here +"couldn't close sockt"+ ie );
+				}
 			}
 		}
+
+
+		private void respond( BufferedReader netIn,
+				PrintWriter netOut ) throws IOException
+		{
+			final String here = cl +"r ";
+			String inputT, outputT;
+			// AhpProtocol referee = new AhpProtocol();
+			int times = 0;
+			while ( (inputT = netIn.readLine()) != null ) // IMPROVE assignment as expression
+			{
+				System.out.println( here +"Bank received: "+ inputT );
+				outputT = inputT;// referee.replyFrom( inputT );
+				if ( times > 0 || outputT.equals( "END" ) )
+				{
+					break;
+				}
+				else
+				{
+					netOut.println( outputT ); // echo
+					times++;
+				}
+			}
+		}
+
+
+		public void setSocket( Socket earTrumpet )
+		{
+			bidiChannel = earTrumpet;
+		}
+
+
 	}
 
 }
