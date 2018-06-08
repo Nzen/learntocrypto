@@ -8,7 +8,9 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.channels.IllegalBlockingModeException;
-import java.util.Map;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -23,6 +25,7 @@ public class Bank
 	private ThreadPoolExecutor executor;
 	private int tcpPort = 3876;
 	private ServerSocket ear;
+	private List<TransactionRequest> messageLog;
 
 
 	public Bank()
@@ -36,6 +39,7 @@ public class Bank
 		{
 			System.err.println( "couldn't accept a connection "+ iff );
 		}
+		messageLog = Collections.synchronizedList( new LinkedList<>() );
 	}
 
 
@@ -107,7 +111,7 @@ public class Bank
 			{
 				System.out.println( here +"Bank received: "+ inputT );
 				outputT = inputT;// referee.replyFrom( inputT );
-				JSONObject request = JSON.parseObject( inputT );
+				TransactionRequest wantsTo = JSON.parseObject( inputT, TransactionRequest.class );
 				if ( times > 0 )
 				{
 					break;
@@ -116,16 +120,28 @@ public class Bank
 				{
 					ear.close();
 				}
-				else if ( request.containsKey( "cmd" ) )
+				else if ( wantsTo.getNature() == RequestType.DEPOSIT
+						&& wantsTo.getAmount() > 0 )
 				{
-					String typeOfRequest = request.getString( "cmd" );
-					if ( typeOfRequest.equals( "balance" ) )
+					synchronized (messageLog)
 					{
-						request.put( "balance", "0" );
-						outputT = JSON.toJSONString( request );
-						netOut.println( outputT ); // echo
-						times++;
+						messageLog.add( wantsTo );
 					}
+					JSONObject response = new JSONObject();
+					response.put( "cmd", RequestType.BALANCE_AMOUNT.getCmd() );
+					response.put( RequestType.BALANCE_AMOUNT.getCmd(), balanceFor( 0 ) );
+					outputT = JSON.toJSONString( response );
+					netOut.println( outputT ); // echo
+					times++;
+				}
+				else if ( wantsTo.getNature() == RequestType.BALANCE_AMOUNT )
+				{
+					JSONObject response = new JSONObject();
+					response.put( "cmd", RequestType.BALANCE_AMOUNT.getCmd() );
+					response.put( RequestType.BALANCE_AMOUNT.getCmd(), balanceFor( 0 ) );
+					outputT = JSON.toJSONString( response );
+					netOut.println( outputT );
+					times++;
 				}
 				else
 				{
@@ -133,6 +149,15 @@ public class Bank
 					times++;
 				}
 			}
+		}
+
+
+		private int balanceFor( int accountId )
+		{
+			return messageLog.stream()
+					.filter( ( TransactionRequest msg ) -> msg.getNature() == RequestType.DEPOSIT )
+					.mapToInt(  ( TransactionRequest msg ) -> msg.getAmount() )
+					.sum();
 		}
 
 

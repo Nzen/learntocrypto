@@ -21,7 +21,8 @@ public class Teller
 	}
 
 
-	public void request()
+	// IMPROVE this signature will last all of five minutes, obviously; but I won't presume for now
+	public void request( RequestType whatDo, int value )
 	{
 		final String here = cl +"r ";
 		String localhost = "127.0.0.1";
@@ -36,9 +37,17 @@ public class Teller
 		{
 			String inputT, outputT;
 			int times = 0;
-			// Improve use a real protocol
 			Map<String,String> request = new TreeMap<>();
-			request.put("cmd", "balance");
+			// Improve use a real protocol
+			if ( whatDo == RequestType.DEPOSIT )
+			{
+				request.put("cmd", whatDo.getCmd());
+				request.put("amount", Integer.toString( value ));
+			}
+			else
+			{
+				request.put("cmd", whatDo.getCmd());
+			}
 			netOut.println( JSON.toJSONString(request) );
 			times++;
 			while ( (inputT = netIn.readLine()) != null ) // IMPROVE assignment as expression
