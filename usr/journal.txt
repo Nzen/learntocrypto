@@ -1,5 +1,18 @@
 
-# 180605 am
+# 180606
+
+Ah, using a single main works. And responding on a separate thread makes this actually work.
+
+I had links to fastjson wiki pages, but that's fine, I can get them again.
+
+problem 02 involves the teller able to deposit to the bank. The bank will provide a sum of the deposits, preferably by using a lambda and reduce() on the list of received messages.
+
+https://docs.oracle.com/javase/tutorial/java/javaOO/lambdaexpressions.html#syntax
+https://docs.oracle.com/javase/tutorial/collections/streams/reduction.html
+
+I'm inclined to add a protocol compatibiityId, but that should be low on the list of things I can change.
+
+# 180605
 
 Added jar maven config, but I left it broken because I need a switch such that it will run either the server or client. Preferably, it should use a cli arg to choose which (I wonder if a teller is different from a bank user). Also add one for the tcp port.
 
