@@ -5,6 +5,8 @@ public enum RequestType
 {
 	BALANCE_AMOUNT( "balance" ),
 	DEPOSIT( "deposit" ),
+	WITHDRAWL( "withdraw" ),
+	REJECT( "rejected" ),
 	UNRECOGNIZED( "bamf" );
 
 	private String commandId;

@@ -1,4 +1,19 @@
 
+# 180608
+
+Bank can probably handle withdrawing funds. Which is to say, I extracted methods from Dispachee.respond() and ensured that it can do all the old stuff. However, Bios needs to become aware of the ability to withdraw. After Teller gets that ability. Rename Bios to Login (or something).
+
+If I add a couple more response types, I'll need to refactor this with more intention. As there are 14 or whatever problems, I'll probably have plenty of opportunities. As an example, I'm tempted to add a message compatibility version, but I expect that I'll end up doing something like that later.
+
+# 1806067
+
+advance pom version with each branch closure
+
+add a readme in my solution folder, so I can say dependencies
+
+withdrawl. do I negative a deposit, jk ? what does a rejection look like ?
+should I read ahead ? No.
+
 # 180606
 
 Ah, using a single main works. And responding on a separate thread makes this actually work.

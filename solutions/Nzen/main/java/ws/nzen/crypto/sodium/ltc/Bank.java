@@ -22,6 +22,7 @@ import com.alibaba.fastjson.JSONObject;
 public class Bank
 {
 	private static final String cl = "b.";
+	static final String COMMAND = "cmd";
 	private ThreadPoolExecutor executor;
 	private int tcpPort = 3876;
 	private ServerSocket ear;
@@ -104,59 +105,105 @@ public class Bank
 				PrintWriter netOut ) throws IOException
 		{
 			final String here = cl +"r ";
-			String inputT, outputT;
+			int accountId = 0;
+			String inputT, outputT = "";
 			// AhpProtocol referee = new AhpProtocol();
 			int times = 0;
 			while ( (inputT = netIn.readLine()) != null ) // IMPROVE assignment as expression
 			{
 				System.out.println( here +"Bank received: "+ inputT );
-				outputT = inputT;// referee.replyFrom( inputT );
 				TransactionRequest wantsTo = JSON.parseObject( inputT, TransactionRequest.class );
 				if ( times > 0 )
 				{
 					break;
 				}
-				else if ( outputT.equals( "END" ) )
+				else if ( inputT.equals( "END" ) )
 				{
 					ear.close();
 				}
 				else if ( wantsTo.getNature() == RequestType.DEPOSIT
 						&& wantsTo.getAmount() > 0 )
 				{
-					synchronized (messageLog)
-					{
-						messageLog.add( wantsTo );
-					}
-					JSONObject response = new JSONObject();
-					response.put( "cmd", RequestType.BALANCE_AMOUNT.getCmd() );
-					response.put( RequestType.BALANCE_AMOUNT.getCmd(), balanceFor( 0 ) );
+					JSONObject response = respondToDeposit( accountId, wantsTo );
 					outputT = JSON.toJSONString( response );
-					netOut.println( outputT ); // echo
-					times++;
+				}
+				else if ( wantsTo.getNature() == RequestType.WITHDRAWL
+						&& wantsTo.getAmount() > 0 )
+				{
+					JSONObject response = respondToWithdrawl( accountId, wantsTo );
+					outputT = JSON.toJSONString( response );
 				}
 				else if ( wantsTo.getNature() == RequestType.BALANCE_AMOUNT )
 				{
-					JSONObject response = new JSONObject();
-					response.put( "cmd", RequestType.BALANCE_AMOUNT.getCmd() );
-					response.put( RequestType.BALANCE_AMOUNT.getCmd(), balanceFor( 0 ) );
+					JSONObject response = respondToBalance( accountId );
 					outputT = JSON.toJSONString( response );
-					netOut.println( outputT );
-					times++;
 				}
 				else
 				{
-					netOut.println( outputT ); // echo
-					times++;
+					JSONObject response = new JSONObject();
+					response.put( COMMAND, RequestType.UNRECOGNIZED.getCmd() );
+					outputT = JSON.toJSONString( response );
 				}
+				netOut.println( outputT );
+				times++;
 			}
+		}
+
+
+		private JSONObject respondToDeposit( int accountId, TransactionRequest wantsTo)
+		{
+			synchronized (messageLog)
+			{
+				messageLog.add( wantsTo );
+			}
+			JSONObject response = new JSONObject();
+			response.put( COMMAND, RequestType.BALANCE_AMOUNT.getCmd() );
+			response.put( RequestType.BALANCE_AMOUNT.getCmd(), balanceFor( accountId ) );
+			return response;
+		}
+
+
+		private JSONObject respondToWithdrawl( int accountId, TransactionRequest wantsTo)
+		{
+			JSONObject response = new JSONObject();
+			int totalPreWithdraw = balanceFor( 0 );
+			if ( totalPreWithdraw >= wantsTo.getAmount() )
+			{
+				synchronized (messageLog)
+				{
+					messageLog.add( wantsTo );
+				}
+				response.put( COMMAND, RequestType.BALANCE_AMOUNT.getCmd() );
+				response.put( RequestType.BALANCE_AMOUNT.getCmd(), balanceFor( accountId ) );
+			}
+			else
+			{
+				response.put( COMMAND, RequestType.REJECT.getCmd() );
+				response.put( RequestType.BALANCE_AMOUNT.getCmd(),
+						totalPreWithdraw - wantsTo.getAmount() );
+			}
+			return response;
+		}
+
+
+		private JSONObject respondToBalance( int accountId )
+		{
+			JSONObject response = new JSONObject();
+			response.put( COMMAND, RequestType.BALANCE_AMOUNT.getCmd() );
+			response.put( RequestType.BALANCE_AMOUNT.getCmd(), balanceFor( accountId ) );
+			return response;
 		}
 
 
 		private int balanceFor( int accountId )
 		{
 			return messageLog.stream()
-					.filter( ( TransactionRequest msg ) -> msg.getNature() == RequestType.DEPOSIT )
-					.mapToInt(  ( TransactionRequest msg ) -> msg.getAmount() )
+					.filter( ( TransactionRequest msg ) -> msg.getNature() == RequestType.DEPOSIT
+								|| msg.getNature() == RequestType.WITHDRAWL )
+					.mapToInt(  ( TransactionRequest msg )
+							-> ( msg.getNature() == RequestType.DEPOSIT )
+								? msg.getAmount()
+								: -1 * msg.getAmount() )
 					.sum();
 		}
 
